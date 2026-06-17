@@ -19,11 +19,16 @@ jobs:
         make clean
         make
 
-    # NEW: Tell GitHub to harvest the compiled files from the build folder
-    - name: Upload Compiled 3DS App
+    # Artifact 1: Separate 3DSX file (for Homebrew Launcher)
+    - name: Upload 3DSX Homebrew File
       uses: actions/upload-artifact@v4
       with:
-        name: uShop-Build-${{ github.run_number }}
-        path: |
-          3DS_app/uShop.3dsx
-          3DS_app/uShop.cia
+        name: uShop-Homebrew-3DSX
+        path: 3DS_app/uShop.3dsx
+
+    # Artifact 2: Separate CIA file (for Home Menu Installation / Citra)
+    - name: Upload CIA Installer File
+      uses: actions/upload-artifact@v4
+      with:
+        name: uShop-Installer-CIA
+        path: 3DS_app/uShop.cia
