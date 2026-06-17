@@ -1,63 +1,75 @@
 #include <3ds.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <malloc.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
 
-// Helper function to fill a rectangle on a 3D video buffer
-void drawRect(u8* fb, int x, int y, int w, int h, u8 r, u8 g, u8 b, int screenWidth) {
-    for (int i = x; i < x + w; i++) {
-        for (int j = y; j < y + h; j++) {
-            // 3DS screens are rotated physically; this math aligns it to standard (x, y)
-            int index = 3 * (i * screenWidth + (screenWidth - 1 - j));
-            fb[index]     = b; // Blue
-            fb[index + 1] = g; // Green
-            fb[index + 2] = r; // Red
-        }
+// Allocate 128KB buffer for the 3DS sockets service
+#define SOC_ALIGN       0x1000
+#define SOC_BUFFERSIZE  0x20000
+
+static u32 *soc_buffer = NULL;
+
+void initNetwork() {
+    // Allocate memory alignment for network operations
+    soc_buffer = (u32*)memalign(SOC_ALIGN, SOC_BUFFERSIZE);
+    if(soc_buffer == NULL) {
+        printf("Failed to allocate SOC buffer memory.\n");
+        return;
+    }
+
+    // Initialize the 3DS SOC service
+    Result ret = socInit(soc_buffer, SOC_BUFFERSIZE);
+    if(R_FAILED(ret)) {
+        printf("socInit failed: 0x%08X\n", (unsigned int)ret);
+        free(soc_buffer);
+        soc_buffer = NULL;
+    } else {
+        printf("3DS Network System: ONLINE\n");
+    }
+}
+
+void exitNetwork() {
+    if(soc_buffer != NULL) {
+        socExit();
+        free(soc_buffer);
+        soc_buffer = NULL;
     }
 }
 
 int main(int argc, char **argv) {
     gfxInitDefault();
+    
+    // Direct standard console output to the TOP screen for system logs
+    consoleInit(GFX_TOP, NULL);
+    
+    printf("uShop Functional Boot Target...\n");
+    printf("Press START to exit.\n\n");
 
-    // Main application loop
+    // Start the network service
+    initNetwork();
+
     while (aptMainLoop()) {
         hidScanInput();
         u32 kDown = hidKeysDown();
-        if (kDown & KEY_START) break; // Press START to exit back to Homebrew Menu
+        if (kDown & KEY_START) break;
 
-        // Get pointers to the raw screen drawing memory buffers
-        u8* topFB    = gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL);
-        u8* bottomFB = gfxGetFramebuffer(GFX_BOTTOM, GFX_LEFT, NULL, NULL);
+        // PLACEHOLDER: This is where we will map a button press
+        // (like pressing 'A') to trigger a message to the Pi server
+        if (kDown & KEY_A) {
+            printf("A pressed: Sending ping request...\n");
+        }
 
-        // ----------------------------------------------------
-        // 1. DRAW TOP SCREEN (400x240)
-        // ----------------------------------------------------
-        // Soft Orange/Beige Canvas Background
-        drawRect(topFB, 0, 0, 400, 240, 255, 242, 229, 240);
-        
-        // Pure White Status Bar (Top 20 pixels)
-        drawRect(topFB, 0, 0, 400, 20, 255, 255, 255, 240);
-        
-        // Light Gray Footer Bar (Bottom 40 pixels)
-        drawRect(topFB, 0, 200, 400, 40, 235, 235, 235, 240);
-
-        // ----------------------------------------------------
-        // 2. DRAW BOTTOM SCREEN (320x240)
-        // ----------------------------------------------------
-        // Soft Orange/Beige Canvas Background
-        drawRect(bottomFB, 0, 0, 320, 240, 255, 242, 229, 240);
-        
-        // Light Gray Static Bottom Menu Bar (Bottom 50 pixels)
-        drawRect(bottomFB, 0, 190, 320, 50, 235, 235, 235, 240);
-
-        // PLACEHOLDER: Draw an eShop Item Grid Button (60x60 square)
-        // White button background
-        drawRect(bottomFB, 20, 30, 60, 60, 255, 255, 255, 240);
-
-        // Flush and swap video frames
         gfxFlushBuffers();
         gfxSwapBuffers();
         gspWaitForVBlank();
     }
 
+    // Clean up network allocation safely before quitting
+    exitNetwork();
     gfxExit();
     return 0;
 }
