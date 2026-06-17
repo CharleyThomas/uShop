@@ -2,65 +2,84 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <malloc.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <unistd.h>
 
-// Allocate 128KB buffer for the 3DS sockets service
-#define SOC_ALIGN       0x1000
-#define SOC_BUFFERSIZE  0x20000
-
-static u32 *soc_buffer = NULL;
-
-void initNetwork() {
-    // Allocate memory alignment for network operations
-    soc_buffer = (u32*)memalign(SOC_ALIGN, SOC_BUFFERSIZE);
-    if(soc_buffer == NULL) {
-        printf("Failed to allocate SOC buffer memory.\n");
-        return;
-    }
-
-    // Initialize the 3DS SOC service
-    Result ret = socInit(soc_buffer, SOC_BUFFERSIZE);
-    if(R_FAILED(ret)) {
-        printf("socInit failed: 0x%08X\n", (unsigned int)ret);
-        free(soc_buffer);
-        soc_buffer = NULL;
-    } else {
-        printf("3DS Network System: ONLINE\n");
-    }
-}
-
-void exitNetwork() {
-    if(soc_buffer != NULL) {
-        socExit();
-        free(soc_buffer);
-        soc_buffer = NULL;
-    }
-}
+// Application States
+typedef enum {
+    STATE_IP_ENTRY,
+    STATE_MAIN_GRID
+} AppState;
 
 int main(int argc, char **argv) {
     gfxInitDefault();
     
-    // Direct standard console output to the TOP screen for system logs
-    consoleInit(GFX_TOP, NULL);
-    
-    printf("uShop Functional Boot Target...\n");
-    printf("Press START to exit.\n\n");
+    // Initialize standard console text print engines for both screens
+    PrintConsole topConsole, bottomConsole;
+    consoleInit(GFX_TOP, &topConsole);
+    consoleInit(GFX_BOTTOM, &bottomConsole);
 
-    // Start the network service
-    initNetwork();
+    AppState currentState = STATE_IP_ENTRY;
 
     while (aptMainLoop()) {
         hidScanInput();
         u32 kDown = hidKeysDown();
-        if (kDown & KEY_START) break;
+        u32 kHeld = hidKeysHeld();
+        
+        if (kDown & KEY_START) break; // Exit application safely
 
-        // PLACEHOLDER: This is where we will map a button press
-        // (like pressing 'A') to trigger a message to the Pi server
-        if (kDown & KEY_A) {
-            printf("A pressed: Sending ping request...\n");
+        // Read touch screen inputs
+        touchPosition touch;
+        hidTouchRead(&touch);
+
+        // ----------------------------------------------------
+        // LOGIC & RENDERING ENGINE BY STATE
+        // ----------------------------------------------------
+        if (currentState == STATE_IP_ENTRY) {
+            // --- TOP SCREEN: IP ENTRY MODE ---
+            consoleSelect(&topConsole);
+            consoleClear();
+            printf("\n\n\n\n\n");
+            printf("          [ uShop Logo Placeholder ]\n");
+            printf("               (logo.png target)\n");
+
+            // --- BOTTOM SCREEN: IP ENTRY MODE ---
+            consoleSelect(&bottomConsole);
+            consoleClear();
+            printf("\n\n\n");
+            printf("  Enter server IP address:\n");
+            printf("  _____________________________________\n");
+            printf("  |                                   |\n");
+            printf("  |___________________________________|\n");
+            printf("\n\n\n\n\n");
+            printf("            <skip for testing>\n");
+
+            // Touch collision detection for "<skip for testing>" zone
+            if (kDown & KEY_TOUCH) {
+                // Bounds matching roughly where the text renders on screen
+                if (touch.px > 60 && touch.px < 260 && touch.py > 140 && touch.py < 180) {
+                    currentState = STATE_MAIN_GRID; // Swap menus!
+                }
+            }
+        } 
+        else if (currentState == STATE_MAIN_GRID) {
+            // --- TOP SCREEN: SHOP DISPLAY ---
+            consoleSelect(&topConsole);
+            consoleClear();
+            printf("\n\n\n\n\n");
+            printf("          [ uShop Logo Placeholder ]\n");
+
+            // --- BOTTOM SCREEN: PRODUCT GRID ---
+            consoleSelect(&bottomConsole);
+            consoleClear();
+            printf("\n");
+            // Render a clean functional grid array using text layouts
+            printf("  [ App 1 ]   [ App 2 ]   [ App 3 ]\n\n\n");
+            printf("  [ App 4 ]   [ App 5 ]   [ App 6 ]\n\n\n");
+            printf("  [ App 7 ]   [ App 8 ]   [ App 9 ]\n");
+            printf("\n\n\n Press B to return to setup");
+
+            if (kDown & KEY_B) {
+                currentState = STATE_IP_ENTRY;
+            }
         }
 
         gfxFlushBuffers();
@@ -68,8 +87,6 @@ int main(int argc, char **argv) {
         gspWaitForVBlank();
     }
 
-    // Clean up network allocation safely before quitting
-    exitNetwork();
     gfxExit();
     return 0;
 }
