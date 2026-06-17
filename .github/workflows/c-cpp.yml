@@ -23,12 +23,14 @@ jobs:
         make clean
         make
 
-    # --- 2. PREPARE THE APP WORKSPACES ---
+    # --- 2. PREPARE THE APP WORKSPACES (With dummy text sizes) ---
     - name: Package Ecosystem Apps
       run: |
-        cp PC_app/uPC.exe ./uServer.exe || touch uServer.exe
-        touch uServer.apk
-        touch uServer.img
+        cp PC_app/uPC.exe ./uServer.exe || echo "placeholder" > uServer.exe
+        
+        # Write dummy text into these files so their size is > 0 bytes
+        echo "Android placeholder build data" > uServer.apk
+        echo "Raspberry Pi placeholder build data" > uServer.img
 
     # --- 3. AUTOMATICALLY PUBLISH RAW PRE-RELEASE ASSETS ---
     - name: Update Dev Release
@@ -37,7 +39,7 @@ jobs:
         tag_name: "Dev-Files"
         name: "Dev Files Test"
         draft: false
-        prerelease: true       # This forces the orange "Pre-release" label!
+        prerelease: true       # Bright orange Pre-release tag
         make_latest: true
         files: |
           3DS_app/uShop.3dsx
@@ -45,3 +47,4 @@ jobs:
           uServer.exe
           uServer.apk
           uServer.img
+        
