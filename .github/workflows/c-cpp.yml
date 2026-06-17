@@ -18,3 +18,12 @@ jobs:
         cd 3DS_app
         make clean
         make
+
+    # NEW: Tell GitHub to harvest the compiled files from the build folder
+    - name: Upload Compiled 3DS App
+      uses: actions/upload-artifact@v4
+      with:
+        name: uShop-Build-${{ github.run_number }}
+        path: |
+          3DS_app/uShop.3dsx
+          3DS_app/uShop.cia
