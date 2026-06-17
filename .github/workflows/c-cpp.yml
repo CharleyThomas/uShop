@@ -16,13 +16,14 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    # Fix: Fetch the correct full Project_CTR repository archive, step into the makerom subfolder, and compile
+    # Fix: Install missing compiler dependency libraries via apt-get
     - name: Compile makerom from Source Zip
       run: |
-        # Download the official Project_CTR source code archive
-        curl -L -o project-ctr.zip https://github.com/3DSGuy/Project_CTR/archive/refs/heads/master.zip
+        # Update package lists and install required dev libraries
+        sudo apt-get update && sudo apt-get install -y libmbedtls-dev libyaml-dev zlib1g-dev
         
-        # Unzip the source directory
+        # Download the Project_CTR source code archive
+        curl -L -o project-ctr.zip https://github.com/3DSGuy/Project_CTR/archive/refs/heads/master.zip
         unzip project-ctr.zip
         
         # Step straight into the makerom subfolder and build it
