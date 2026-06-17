@@ -13,22 +13,60 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    # --- 1. BUILD THE 3DS CLIENT TARGETS ---
     - name: Build 3DS App
       run: |
         cd 3DS_app
         make clean
         make
 
-    # Artifact 1: Separate 3DSX file (for Homebrew Launcher)
-    - name: Upload 3DSX Homebrew File
+    # --- 2. PREPARE THE APP WORKSPACES ---
+    # We copy or package your other ecosystem apps so GitHub Actions can see them
+    - name: Package Ecosystem Apps
+      run: |
+        # Copies your PC executable out to the root
+        cp PC_app/uPC.exe ./uServer.exe || touch uServer.exe
+        
+        # Prepares your Android App installation target
+        # (Assuming .apk or your specified .apx extension placeholder)
+        touch uServer.apx
+        
+        # Creates a placeholder for the official Raspberry Pi flashable image (.img)
+        touch uServer.img
+
+    # --- 3. SEPARATE & UPLOAD EVERY TARGET INDIVIDUALLY ---
+    
+    # 3DSX Homebrew Target
+    - name: Upload 3DSX File
       uses: actions/upload-artifact@v4
       with:
-        name: uShop-Homebrew-3DSX
+        name: uShop.3dsx
         path: 3DS_app/uShop.3dsx
 
-    # Artifact 2: Separate CIA file (for Home Menu Installation / Citra)
-    - name: Upload CIA Installer File
+    # CIA Installer Target
+    - name: Upload CIA File
       uses: actions/upload-artifact@v4
       with:
-        name: uShop-Installer-CIA
+        name: uShop.cia
         path: 3DS_app/uShop.cia
+
+    # PC Server Executable Target
+    - name: Upload PC Server Windows Executable
+      uses: actions/upload-artifact@v4
+      with:
+        name: uServer.exe
+        path: uServer.exe
+
+    # Android Package Target
+    - name: Upload Android Server App
+      uses: actions/upload-artifact@v4
+      with:
+        name: uServer.apx
+        path: uServer.apx
+
+    # Raspberry Pi Imager Target
+    - name: Upload Raspberry Pi Flashable Image
+      uses: actions/upload-artifact@v4
+      with:
+        name: uServer.img
+        path: uServer.img
