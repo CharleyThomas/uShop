@@ -16,21 +16,25 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    # Fix: Install missing compiler dependency libraries via apt-get
+    # Fix: Compile the internal dependencies (libblz) before running the main makerom build
     - name: Compile makerom from Source Zip
       run: |
-        # Update package lists and install required dev libraries
+        # Install the required Ubuntu dev packages
         sudo apt-get update && sudo apt-get install -y libmbedtls-dev libyaml-dev zlib1g-dev
         
-        # Download the Project_CTR source code archive
+        # Download and extract Project_CTR
         curl -L -o project-ctr.zip https://github.com/3DSGuy/Project_CTR/archive/refs/heads/master.zip
         unzip project-ctr.zip
         
-        # Step straight into the makerom subfolder and build it
-        cd Project_CTR-master/makerom
+        # 1. Step into the local blz directory and build it first
+        cd Project_CTR-master/makerom/libblz
         make
         
-        # Deploy the compiled tool straight into devkitPro's path
+        # 2. Go back up and build makerom
+        cd ..
+        make
+        
+        # Deploy the finished binary to devkitPro's path
         sudo cp makerom /opt/devkitpro/tools/bin/makerom
         sudo chmod +x /opt/devkitpro/tools/bin/makerom
 
