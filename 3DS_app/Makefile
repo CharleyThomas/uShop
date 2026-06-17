@@ -6,6 +6,7 @@ LIBS        := -lctru -lm
 
 CC          := $(DEVKITARM)/bin/arm-none-eabi-gcc
 3DSXTOOL    := $(DEVKITPRO)/tools/bin/3dsxtool
+MAKEROM     := $(DEVKITPRO)/tools/bin/makerom
 
 .PHONY: all clean
 
@@ -15,9 +16,9 @@ $(TARGET).3dsx: main.o
 	$(CC) $(CFLAGS) -specs=3dsx.specs main.o -L$(LIBDIRS)/lib $(LIBS) -o $(TARGET).elf
 	$(3DSXTOOL) $(TARGET).elf $(TARGET).3dsx
 
-$(TARGET).cia: $(TARGET).3dsx
-	@echo "Placeholder CIA generation with valid file size"
-	echo "3DS CIA installer placeholder data" > $(TARGET).cia
+$(TARGET).cia: $(TARGET).3dsx uShop.rsf
+	@echo "Building authentic, bootable 3DS CIA binary..."
+	$(MAKEROM) -f cia -o $(TARGET).cia -rsf uShop.rsf -elf $(TARGET).elf -major 0 -minor 1 -micro 0
 
 main.o: main.c
 	$(CC) $(CFLAGS) -I$(LIBDIRS)/include -c main.c -o main.o
