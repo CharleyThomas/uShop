@@ -16,7 +16,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    # Fix: Compile the internal dependencies (libblz) before running the main makerom build
+    # Fix: Dynamically locate libblz directory to bypass folder structure changes
     - name: Compile makerom from Source Zip
       run: |
         # Install the required Ubuntu dev packages
@@ -26,11 +26,13 @@ jobs:
         curl -L -o project-ctr.zip https://github.com/3DSGuy/Project_CTR/archive/refs/heads/master.zip
         unzip project-ctr.zip
         
-        # 1. Step into the local blz directory and build it first
-        cd Project_CTR-master/makerom/libblz
+        # Dynamically find where libblz's Makefile lives and compile it
+        BLZ_PATH=$(find . -type d -name "libblz" | head -n 1)
+        echo "Found libblz at: $BLZ_PATH"
+        cd "$BLZ_PATH"
         make
         
-        # 2. Go back up and build makerom
+        # Move up to the main makerom directory and compile it
         cd ..
         make
         
