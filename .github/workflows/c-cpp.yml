@@ -16,7 +16,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    # Fix: Dynamically locate libblz directory to bypass folder structure changes
+    # Fix: Correctly navigate straight back to the main makerom folder after building libblz
     - name: Compile makerom from Source Zip
       run: |
         # Install the required Ubuntu dev packages
@@ -26,14 +26,14 @@ jobs:
         curl -L -o project-ctr.zip https://github.com/3DSGuy/Project_CTR/archive/refs/heads/master.zip
         unzip project-ctr.zip
         
-        # Dynamically find where libblz's Makefile lives and compile it
+        # Dynamically find and step into libblz, then compile it
         BLZ_PATH=$(find . -type d -name "libblz" | head -n 1)
         echo "Found libblz at: $BLZ_PATH"
         cd "$BLZ_PATH"
         make
         
-        # Move up to the main makerom directory and compile it
-        cd ..
+        # Explicitly jump back to the main makerom folder (two directories up from libblz)
+        cd .. && cd ..
         make
         
         # Deploy the finished binary to devkitPro's path
