@@ -16,11 +16,15 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    # NEW: Dynamically install makerom and CIA asset packagers inside the runner
-    - name: Install 3DS CIA Build Dependencies
+    # Fix: Manually clone and compile makerom directly inside the worker env
+    - name: Compile makerom Dependency
       run: |
-        sudo dkp-pacman -Syy --noconfirm
-        sudo dkp-pacman -S 3ds-dev --noconfirm
+        git clone https://github.com/3NDY/makerom.git
+        cd makerom
+        make
+        # Copy the freshly compiled makerom binary straight into devkitPro's tools path
+        sudo cp makerom /opt/devkitpro/tools/bin/makerom
+        sudo chmod +x /opt/devkitpro/tools/bin/makerom
 
     # --- 1. BUILD THE 3DS CLIENT TARGETS ---
     - name: Build 3DS App
