@@ -16,20 +16,20 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    # Fix: Download source via curl zip (bypasses git auth) and compile locally to match GLIBC version
+    # Fix: Fetch the correct full Project_CTR repository archive, step into the makerom subfolder, and compile
     - name: Compile makerom from Source Zip
       run: |
-        # Download the source code zip for makerom
-        curl -L -o makerom-src.zip https://github.com/procyon-den/makerom/archive/refs/heads/master.zip
+        # Download the official Project_CTR source code archive
+        curl -L -o project-ctr.zip https://github.com/3DSGuy/Project_CTR/archive/refs/heads/master.zip
         
-        # Unzip the source code
-        unzip makerom-src.zip
+        # Unzip the source directory
+        unzip project-ctr.zip
         
-        # Step into the extracted directory and build it
-        cd makerom-master
+        # Step straight into the makerom subfolder and build it
+        cd Project_CTR-master/makerom
         make
         
-        # Move the newly compiled binary into devkitPro's path
+        # Deploy the compiled tool straight into devkitPro's path
         sudo cp makerom /opt/devkitpro/tools/bin/makerom
         sudo chmod +x /opt/devkitpro/tools/bin/makerom
 
