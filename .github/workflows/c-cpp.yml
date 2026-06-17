@@ -4,6 +4,11 @@ on:
   push:
     branches: [ main ]
 
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -23,48 +28,56 @@ jobs:
     # --- 2. PREPARE THE APP WORKSPACES ---
     - name: Package Ecosystem Apps
       run: |
-        # Prepares your Windows PC executable placeholder
         cp PC_app/uPC.exe ./uServer.exe || touch uServer.exe
-        
-        # Prepares your Android App installation target (.apk)
         touch uServer.apk
-        
-        # Creates a placeholder for the official Raspberry Pi flashable image (.img)
         touch uServer.img
 
-    # --- 3. SEPARATE & UPLOAD EVERY TARGET INDIVIDUALLY ---
-    
-    # 3DSX Homebrew Target
+    # --- 3. UPLOAD AS SEPARATE ARTIFACTS (BACKUP) ---
     - name: Upload 3DSX File
       uses: actions/upload-artifact@v4
       with:
         name: uShop.3dsx
         path: 3DS_app/uShop.3dsx
 
-    # CIA Installer Target
     - name: Upload CIA File
       uses: actions/upload-artifact@v4
       with:
         name: uShop.cia
         path: 3DS_app/uShop.cia
 
-    # PC Server Executable Target
     - name: Upload PC Server Windows Executable
       uses: actions/upload-artifact@v4
       with:
         name: uServer.exe
         path: uServer.exe
 
-    # Android Package Target (Updated to .apk)
     - name: Upload Android Server App
       uses: actions/upload-artifact@v4
       with:
         name: uServer.apk
         path: uServer.apk
 
-    # Raspberry Pi Imager Target
     - name: Upload Raspberry Pi Flashable Image
       uses: actions/upload-artifact@v4
       with:
         name: uServer.img
         path: uServer.img
+
+    # --- 4. DEPLOY RAW DIRECT FILES TO GITHUB PAGES ---
+    - name: Move files to Web Folder
+      run: |
+        mkdir -p public_download
+        cp 3DS_app/uShop.3dsx public_download/uShop.3dsx
+        cp 3DS_app/uShop.cia public_download/uShop.cia
+        cp uServer.exe public_download/uServer.exe
+        cp uServer.apk public_download/uServer.apk
+        cp uServer.img public_download/uServer.img
+
+    - name: Upload Static Web Assets
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: 'public_download'
+
+    - name: Deploy Direct Links to Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
