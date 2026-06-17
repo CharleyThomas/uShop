@@ -21,15 +21,13 @@ jobs:
         make
 
     # --- 2. PREPARE THE APP WORKSPACES ---
-    # We copy or package your other ecosystem apps so GitHub Actions can see them
     - name: Package Ecosystem Apps
       run: |
-        # Copies your PC executable out to the root
+        # Prepares your Windows PC executable placeholder
         cp PC_app/uPC.exe ./uServer.exe || touch uServer.exe
         
-        # Prepares your Android App installation target
-        # (Assuming .apk or your specified .apx extension placeholder)
-        touch uServer.apx
+        # Prepares your Android App installation target (.apk)
+        touch uServer.apk
         
         # Creates a placeholder for the official Raspberry Pi flashable image (.img)
         touch uServer.img
@@ -57,12 +55,12 @@ jobs:
         name: uServer.exe
         path: uServer.exe
 
-    # Android Package Target
+    # Android Package Target (Updated to .apk)
     - name: Upload Android Server App
       uses: actions/upload-artifact@v4
       with:
-        name: uServer.apx
-        path: uServer.apx
+        name: uServer.apk
+        path: uServer.apk
 
     # Raspberry Pi Imager Target
     - name: Upload Raspberry Pi Flashable Image
