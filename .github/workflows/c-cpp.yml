@@ -15,8 +15,6 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-      with:
-        fetch-depth: 0 # Fetches full history so git push works cleanly
 
     # --- 1. BUILD THE 3DS CLIENT TARGETS ---
     - name: Build 3DS App
@@ -32,25 +30,18 @@ jobs:
         touch uServer.apk
         touch uServer.img
 
-    # --- 3. COMMIT THE UNCOMPRESSED FILES TO REPO ---
-    - name: Commit Unzipped Binaries directly to Repository
-      run: |
-        # Create a dedicated directory named downloads
-        mkdir -p downloads
-        
-        # Copy raw targets into the downloads folder
-        cp 3DS_app/uShop.3dsx downloads/uShop.3dsx
-        cp 3DS_app/uShop.cia downloads/uShop.cia
-        cp uServer.exe downloads/uServer.exe
-        cp uServer.apk downloads/uServer.apk
-        cp uServer.img downloads/uServer.img
-        
-        # Setup git bot identity to avoid permission blocks
-        git config --global --add safe.directory "$GITHUB_WORKSPACE"
-        git config user.name "github-actions[bot]"
-        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-        
-        # Add, commit and push changes back to the main branch
-        git add downloads/*
-        git commit -m "Automated update: Fresh binaries for Build $GITHUB_RUN_NUMBER" || echo "No binary files changed."
-        git push origin main
+    # --- 3. AUTOMATICALLY PUBLISH RAW PRE-RELEASE ASSETS ---
+    - name: Update Dev Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: "Dev-Files"
+        name: "Dev Files Test"
+        draft: false
+        prerelease: true       # This forces the orange "Pre-release" label!
+        make_latest: true
+        files: |
+          3DS_app/uShop.3dsx
+          3DS_app/uShop.cia
+          uServer.exe
+          uServer.apk
+          uServer.img
