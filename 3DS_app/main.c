@@ -1,9 +1,8 @@
 #include <3ds.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <malloc.h>
+#include <string.h>
 
-// Application States
 typedef enum {
     STATE_IP_ENTRY,
     STATE_MAIN_GRID
@@ -12,66 +11,78 @@ typedef enum {
 int main(int argc, char **argv) {
     gfxInitDefault();
     
-    // Initialize standard console text print engines for both screens
+    // Initialize text consoles for both screens
     PrintConsole topConsole, bottomConsole;
     consoleInit(GFX_TOP, &topConsole);
     consoleInit(GFX_BOTTOM, &bottomConsole);
 
     AppState currentState = STATE_IP_ENTRY;
+    
+    // Buffer memory to store the typed IP address
+    char serverIP[16] = "192.168.1.100"; // Default placeholder text
 
     while (aptMainLoop()) {
         hidScanInput();
         u32 kDown = hidKeysDown();
-        u32 kHeld = hidKeysHeld();
         
         if (kDown & KEY_START) break; // Exit application safely
 
-        // Read touch screen inputs
         touchPosition touch;
         hidTouchRead(&touch);
 
-        // ----------------------------------------------------
-        // LOGIC & RENDERING ENGINE BY STATE
-        // ----------------------------------------------------
         if (currentState == STATE_IP_ENTRY) {
-            // --- TOP SCREEN: IP ENTRY MODE ---
+            // --- TOP SCREEN ---
             consoleSelect(&topConsole);
             consoleClear();
             printf("\n\n\n\n\n");
             printf("          [ uShop Logo Placeholder ]\n");
             printf("               (logo.png target)\n");
 
-            // --- BOTTOM SCREEN: IP ENTRY MODE ---
+            // --- BOTTOM SCREEN ---
             consoleSelect(&bottomConsole);
             consoleClear();
             printf("\n\n\n");
             printf("  Enter server IP address:\n");
             printf("  _____________________________________\n");
             printf("  |                                   |\n");
+            printf("    Current: %s\n", serverIP); // Display what was typed
             printf("  |___________________________________|\n");
             printf("\n\n\n\n\n");
             printf("            <skip for testing>\n");
 
-            // Touch collision detection for "<skip for testing>" zone
             if (kDown & KEY_TOUCH) {
-                // Bounds matching roughly where the text renders on screen
+                // Click 1: Did they tap inside the box area to change the IP?
+                if (touch.px > 20 && touch.px < 300 && touch.py > 40 && touch.py < 90) {
+                    
+                    // Initialize the native 3DS OS Software Keyboard
+                    SwkbdState swkbd;
+                    swkbdInit(&swkbd, SWKBD_TYPE_NUMPAD, 2, 15); // Numpad layout for IPs
+                    swkbdSetValidation(&swkbd, SWKBD_ANYTHING, 0, 0);
+                    swkbdSetFeatures(&swkbd, SWKBD_FIXED_WIDTH);
+                    swkbdSetHintText(&swkbd, "Enter RPi IP Address");
+                    
+                    // Open the keyboard overlay and store the output string
+                    swkbdInputText(&swkbd, serverIP, sizeof(serverIP));
+                }
+
+                // Click 2: Did they tap the "<skip for testing>" region?
                 if (touch.px > 60 && touch.px < 260 && touch.py > 140 && touch.py < 180) {
-                    currentState = STATE_MAIN_GRID; // Swap menus!
+                    currentState = STATE_MAIN_GRID;
                 }
             }
         } 
         else if (currentState == STATE_MAIN_GRID) {
-            // --- TOP SCREEN: SHOP DISPLAY ---
+            // --- TOP SCREEN ---
             consoleSelect(&topConsole);
             consoleClear();
             printf("\n\n\n\n\n");
             printf("          [ uShop Logo Placeholder ]\n");
 
-            // --- BOTTOM SCREEN: PRODUCT GRID ---
+            // --- BOTTOM SCREEN ---
             consoleSelect(&bottomConsole);
             consoleClear();
             printf("\n");
-            // Render a clean functional grid array using text layouts
+            printf("  Target IP Configured: %s\n\n", serverIP);
             printf("  [ App 1 ]   [ App 2 ]   [ App 3 ]\n\n\n");
             printf("  [ App 4 ]   [ App 5 ]   [ App 6 ]\n\n\n");
             printf("  [ App 7 ]   [ App 8 ]   [ App 9 ]\n");
