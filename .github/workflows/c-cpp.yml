@@ -16,16 +16,16 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    # Fix: Secure the pre-compiled binary directly from the official Project_CTR releases
+    # Fix: Use curl with location redirect follow flags to grab the zip file cleanly
     - name: Download and Install makerom Binary
       run: |
-        # Download official v0.19.0 Ubuntu x86_64 build
-        wget https://github.com/3DSGuy/Project_CTR/releases/download/makerom-v0.19.0/makerom-v0.19.0-ubuntu_x86_64.zip
+        # Download the official v0.19.0 Ubuntu x86_64 tool archive
+        curl -L -o makerom.zip https://github.com/3DSGuy/Project_CTR/releases/download/makerom-v0.19.0/makerom-v0.19.0-ubuntu_x86_64.zip
         
-        # Unzip the target tool binary
-        unzip makerom-v0.19.0-ubuntu_x86_64.zip
+        # Extract the tool
+        unzip makerom.zip
         
-        # Move it straight into devkitPro's system tools path
+        # Place it right into devkitPro's tools directory path
         sudo cp makerom /opt/devkitpro/tools/bin/makerom
         sudo chmod +x /opt/devkitpro/tools/bin/makerom
 
