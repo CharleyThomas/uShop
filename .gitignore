@@ -1,0 +1,14 @@
+# Build artifacts
+*.o
+*.elf
+*.vsh
+*.gsh
+*.3dsx
+*.cia
+
+# Folder where temporary build files go
+build/
+
+# OS-specific clutter
+.DS_Store
+Thumbs.db
