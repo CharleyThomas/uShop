@@ -16,13 +16,12 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    # Fix: Manually clone and compile makerom directly inside the worker env
+    # Fix: Pointing to the official public procyon-den repository instead
     - name: Compile makerom Dependency
       run: |
-        git clone https://github.com/3NDY/makerom.git
+        git clone https://github.com/procyon-den/makerom.git
         cd makerom
         make
-        # Copy the freshly compiled makerom binary straight into devkitPro's tools path
         sudo cp makerom /opt/devkitpro/tools/bin/makerom
         sudo chmod +x /opt/devkitpro/tools/bin/makerom
 
