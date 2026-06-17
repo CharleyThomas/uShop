@@ -23,12 +23,12 @@ jobs:
         make clean
         make
 
-    # --- 2. PREPARE THE APP WORKSPACES (With dummy text sizes) ---
+    # --- 2. PREPARE THE APP WORKSPACES ---
     - name: Package Ecosystem Apps
       run: |
         cp PC_app/uPC.exe ./uServer.exe || echo "placeholder" > uServer.exe
         
-        # Write dummy text into these files so their size is > 0 bytes
+        # Keep our dummy text data inside these placeholders so GitHub accepts them
         echo "Android placeholder build data" > uServer.apk
         echo "Raspberry Pi placeholder build data" > uServer.img
 
@@ -39,7 +39,7 @@ jobs:
         tag_name: "Dev-Files"
         name: "Dev Files Test"
         draft: false
-        prerelease: true       # Bright orange Pre-release tag
+        prerelease: true       # Keeps the bright orange Pre-release badge
         make_latest: true
         files: |
           3DS_app/uShop.3dsx
@@ -47,4 +47,3 @@ jobs:
           uServer.exe
           uServer.apk
           uServer.img
-        
